@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar C&I Load Profile Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-solar: #f7b32b;
+            --accent-solar-dim: rgba(247, 179, 43, 0.15);
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-blue: #58a6ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar / Input Panel */
+        .input-panel {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
+            overflow-y: auto;
+            max-height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-solar) 0%, #e09800 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .logo-text h1 {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-text span {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            margin-top: 24px;
+        }
+
+        .section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        label .required {
+            color: var(--accent-solar);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-solar);
+            box-shadow: 0 0 0 3px var(--accent-solar-dim);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--accent-solar) 0%, #e09800 100%);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(247, 179, 43, 0.3);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Output Panel */
+        .output-panel {
+            padding: 24px 32px;
+            overflow-y: auto;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .output-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .export-btn {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .export-btn:hover {
+            background: var(--border-color);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .tab.active {
+            background: var(--accent-solar-dim);
+            border-color: var(--accent-solar);
+            color: var(--accent-solar);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Metrics Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .metric-unit {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        .metric-card.highlight {
+            border-color: var(--accent-solar);
+            background: var(--accent-solar-dim);
+        }
+
+        .metric-card.highlight .metric-value {
+            color: var(--accent-solar);
+        }
+
+        /* Data Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table td {
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: var(--bg-secondary);
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .data-table .number {
+            text-align: right;
+        }
+
+        /* Load Profile Chart */
+        .chart-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .chart {
+            height: 300px;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            padding-top: 24px;
+            position: relative;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(180deg, var(--accent-solar) 0%, rgba(247, 179, 43, 0.3) 100%);
+            border-radius: 2px 2px 0 0;
+            transition: opacity 0.2s;
+            position: relative;
+            min-width: 8px;
+        }
+
+        .chart-bar:hover {
+            opacity: 0.8;
+        }
+
+        .chart-bar::after {
+            content: attr(data-value);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .chart-bar:hover::after {
+            opacity: 1;
+        }
+
+        .chart-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Status Badges */
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .status.high { background: rgba(63, 185, 80, 0.15); color: var(--accent-green); }
+        .status.medium { background: var(--accent-solar-dim); color: var(--accent-solar); }
+        .status.low { background: rgba(248, 81, 73, 0.15); color: var(--accent-red); }
+
+        /* Info Box */
+        .info-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--accent-solar);
+            border-radius: 0 8px 8px 0;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .info-box h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .info-box p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Placeholder State */
+        .placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .placeholder-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .placeholder h3 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .placeholder p {
+            font-size: 14px;
+            max-width: 400px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Weekly Profile Table */
+        .weekly-table {
+            overflow-x: auto;
+        }
+
+        .weekly-table .data-table td.peak {
+            background: rgba(247, 179, 43, 0.2);
+            color: var(--accent-solar);
+        }
+
+        .weekly-table .data-table td.low {
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        /* Notes List */
+        .notes-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .notes-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .notes-list li:last-child {
+            border-bottom: none;
+        }
+
+        .notes-list li::before {
+            content: "→";
+            margin-right: 8px;
+            color: var(--accent-solar);
+        }
+
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .input-panel {
+                position: relative;
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="input-panel">
+            <div class="logo-section">
+                <div class="logo-icon">☀</div>
+                <div class="logo-text">
+                    <h1>Load Profile Generator</h1>
+                    <span>Solar C&I / Sub-Saharan Africa</span>
+                </div>
+            </div>
+
+            <form id="loadProfileForm">
+                <div class="section-title">Required inputs</div>
+
+                <div class="form-group">
+                    <label>Country <span class="required">*</span></label>
+                    <select id="country" required>
+                        <option value="">Select country</option>
+                        <option value="DRC">Democratic Republic of Congo</option>
+                        <option value="Ethiopia">Ethiopia</option>
+                        <option value="Ghana">Ghana</option>
+                        <option value="Kenya">Kenya</option>
+                        <option value="Liberia">Liberia</option>
+                        <option value="Nigeria">Nigeria</option>
+                        <option value="Senegal">Senegal</option>
+                        <option value="South Africa">South Africa</option>
+                        <option value="Tanzania">Tanzania</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>City / Region</label>
+                    <input type="text" id="city" placeholder="e.g., Monrovia, Kinshasa">
+                </div>
+
+                <div class="form-group">
+                    <label>Industry type <span class="required">*</span></label>
+                    <select id="industryType" required>
+                        <option value="">Select industry</option>
+                        <optgroup label="Building materials">
+                            <option value="cement_factory">Cement factory</option>
+                            <option value="concrete_block">Concrete block plant</option>
+                            <option value="steel_fabrication">Steel fabrication</option>
+                            <option value="aluminum_processing">Aluminum processing</option>
+                            <option value="glass_manufacturing">Glass manufacturing</option>
+                            <option value="brick_factory">Brick/tile factory</option>
+                            <option value="paint_manufacturing">Paint manufacturing</option>
+                            <option value="roofing_materials">Roofing materials</option>
+                        </optgroup>
+                        <optgroup label="Food and beverage">
+                            <option value="flour_mill">Flour mill</option>
+                            <option value="rice_mill">Rice mill</option>
+                            <option value="edible_oil">Edible oil processing</option>
+                            <option value="beverage_plant">Fruit juice/beverage plant</option>
+                            <option value="dairy_processing">Dairy processing</option>
+                            <option value="meat_processing">Meat processing</option>
+                            <option value="fish_processing">Fish processing</option>
+                            <option value="industrial_bakery">Bakery (industrial)</option>
+                            <option value="sugar_refinery">Sugar refinery</option>
+                            <option value="brewery">Brewery</option>
+                            <option value="bottling_plant">Bottling plant</option>
+                            <option value="cocoa_processing">Cocoa processing</option>
+                            <option value="cashew_processing">Cashew processing</option>
+                            <option value="coffee_processing">Coffee processing</option>
+                        </optgroup>
+                        <optgroup label="Consumer goods">
+                            <option value="soap_factory">Soap/detergent factory</option>
+                            <option value="cosmetics">Cosmetics manufacturing</option>
+                            <option value="plastic_products">Plastic products</option>
+                            <option value="packaging_factory">Packaging factory</option>
+                            <option value="textile_mill">Textile mill</option>
+                            <option value="garment_factory">Garment factory</option>
+                            <option value="footwear">Footwear manufacturing</option>
+                            <option value="mattress_factory">Mattress factory</option>
+                            <option value="furniture">Furniture manufacturing</option>
+                        </optgroup>
+                        <optgroup label="Agro-processing">
+                            <option value="palm_oil_mill">Palm oil mill</option>
+                            <option value="groundnut">Groundnut processing</option>
+                            <option value="cassava">Cassava processing (gari/starch)</option>
+                            <option value="rubber_processing">Rubber processing</option>
+                            <option value="sisal">Sisal processing</option>
+                            <option value="cotton_ginning">Cotton ginning</option>
+                            <option value="tobacco">Tobacco processing</option>
+                            <option value="tea_processing">Tea processing</option>
+                        </optgroup>
+                        <optgroup label="Chemicals and pharmaceuticals">
+                            <option value="pharmaceutical">Pharmaceutical plant</option>
+                            <option value="fertilizer">Fertilizer blending</option>
+                            <option value="industrial_chemicals">Industrial chemicals</option>
+                            <option value="paint_coatings">Paint and coatings</option>
+                            <option value="pesticide">Pesticide formulation</option>
+                        </optgroup>
+                        <optgroup label="Mining operations">
+                            <option value="gold_mine">Gold mine</option>
+                            <option value="iron_ore_mine">Iron ore mine</option>
+                            <option value="copper_mine">Copper mine</option>
+                            <option value="bauxite_mine">Bauxite mine</option>
+                            <option value="manganese_mine">Manganese mine</option>
+                            <option value="diamond_mine">Diamond mine</option>
+                            <option value="limestone_quarry">Limestone quarry</option>
+                            <option value="granite_quarry">Granite quarry</option>
+                            <option value="sand_mining">Sand mining</option>
+                            <option value="artisanal_mining">Artisanal mining cooperative</option>
+                        </optgroup>
+                        <optgroup label="Oil and gas">
+                            <option value="oil_field">Oil field operations</option>
+                            <option value="gas_processing">Gas processing plant</option>
+                            <option value="lpg_bottling">LPG bottling</option>
+                            <option value="fuel_depot">Fuel depot</option>
+                        </optgroup>
+                        <optgroup label="Hospitality">
+                            <option value="hotel_budget">Hotel (budget)</option>
+                            <option value="hotel_midrange">Hotel (mid-range)</option>
+                            <option value="hotel_luxury">Hotel (luxury/resort)</option>
+                            <option value="lodge">Lodge/guesthouse</option>
+                            <option value="restaurant">Restaurant (standalone)</option>
+                            <option value="conference_center">Conference center</option>
+                        </optgroup>
+                        <optgroup label="Healthcare">
+                            <option value="hospital_general">Hospital (general)</option>
+                            <option value="hospital_specialist">Hospital (specialist)</option>
+                            <option value="clinic">Clinic</option>
+                            <option value="diagnostic_center">Diagnostic center</option>
+                            <option value="pharma_warehouse">Pharmaceutical warehouse</option>
+                        </optgroup>
+                        <optgroup label="Education">
+                            <option value="university">University campus</option>
+                            <option value="boarding_school">Secondary school (boarding)</option>
+                            <option value="vocational">Vocational training center</option>
+                        </optgroup>
+                        <optgroup label="Retail and logistics">
+                            <option value="shopping_mall">Shopping mall</option>
+                            <option value="supermarket">Supermarket</option>
+                            <option value="cold_storage">Cold storage warehouse</option>
+                            <option value="distribution_center">Distribution center</option>
+                            <option value="data_center">Data center</option>
+                        </optgroup>
+                        <optgroup label="Office and commercial">
+                            <option value="office_complex">Office complex</option>
+                            <option value="bank_branch">Bank branch</option>
+                            <option value="telecom_tower">Telecom tower site</option>
+                            <option value="media_station">Media/broadcasting station</option>
+                        </optgroup>
+                        <optgroup label="Large-scale farming">
+                            <option value="commercial_farm">Commercial farm (irrigation)</option>
+                            <option value="greenhouse">Greenhouse/controlled environment</option>
+                            <option value="poultry_layers">Poultry farm (layers)</option>
+                            <option value="poultry_broilers">Poultry farm (broilers)</option>
+                            <option value="pig_farm">Pig farm</option>
+                            <option value="cattle_feedlot">Cattle feedlot</option>
+                            <option value="aquaculture">Aquaculture/fish farm</option>
+                        </optgroup>
+                        <optgroup label="Post-harvest">
+                            <option value="grain_silo">Grain silo/storage</option>
+                            <option value="cold_chain">Cold chain facility</option>
+                            <option value="pack_house">Pack house</option>
+                        </optgroup>
+                        <optgroup label="Water and sanitation">
+                            <option value="water_treatment">Water treatment plant</option>
+                            <option value="desalination">Desalination plant</option>
+                            <option value="pumping_station">Pumping station</option>
+                            <option value="wastewater">Wastewater treatment</option>
+                        </optgroup>
+                        <optgroup label="Transportation">
+                            <option value="airport">Airport terminal</option>
+                            <option value="seaport">Seaport terminal</option>
+                            <option value="railway">Railway station</option>
+                            <option value="bus_depot">Bus depot</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="input-row">
+                    <div class="form-group">
+                        <label>Peak load (kW) <span class="required">*</span></label>
+                        <input type="number" id="peakLoad" required min="1" placeholder="5000">
+                    </div>
+                    <div class="form-group">
+                        <label>Average load (kW) <span class="required">*</span></label>
+                        <input type="number" id="avgLoad" required min="1" placeholder="3400">
+                    </div>
+                </div>
+
+                <div class="section-title">Optional inputs</div>
+
+                <div class="input-row">
+                    <div class="form-group">
+                        <label>Operating start time</label>
+                        <input type="time" id="startTime" value="06:00">
+                    </div>
+                    <div class="form-group">
+                        <label>Operating end time</label>
+                        <input type="time" id="endTime" value="18:00">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Number of shifts</label>
+                    <select id="shifts">
+                        <option value="auto">Auto-detect from load factor</option>
+                        <option value="1">Single shift</option>
+                        <option value="2">Double shift</option>
+                        <option value="3">Continuous (24/7)</option>
+                    </select>
+                </div>
+
+                <div class="input-row">
+                    <div class="form-group">
+                        <label>Grid availability (hrs/day)</label>
+                        <input type="number" id="gridHours" min="0" max="24" placeholder="Auto">
+                    </div>
+                    <div class="form-group">
+                        <label>Generator capacity (kVA)</label>
+                        <input type="number" id="genCapacity" min="0" placeholder="Optional">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Operating days</label>
+                    <select id="operatingDays">
+                        <option value="7">7 days/week</option>
+                        <option value="6">6 days/week (Mon-Sat)</option>
+                        <option value="5">5 days/week (Mon-Fri)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="generate-btn">Generate load profile</button>
+            </form>
+        </div>
+
+        <div class="output-panel">
+            <div id="placeholder" class="placeholder">
+                <div class="placeholder-icon">📊</div>
+                <h3>Enter facility details to generate a load profile</h3>
+                <p>Fill in the required fields on the left panel and click "Generate load profile" to create a comprehensive electrical load analysis.</p>
+            </div>
+
+            <div id="outputContent" style="display: none;">
+                <div class="output-header">
+                    <h2 id="facilityTitle">Load profile results</h2>
+                    <button class="export-btn" onclick="exportToCSV()">↓ Export CSV</button>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('documentation')">Documentation</button>
+                    <button class="tab" onclick="showTab('assumptions')">Assumptions</button>
+                    <button class="tab" onclick="showTab('equipment')">Equipment</button>
+                    <button class="tab" onclick="showTab('loadAnalysis')">Load analysis</button>
+                    <button class="tab" onclick="showTab('hourlyProfile')">Hourly profile</button>
+                    <button class="tab" onclick="showTab('summary')">Summary</button>
+                </div>
+
+                <!-- Documentation Tab -->
+                <div id="documentation" class="tab-content active">
+                    <div class="info-box">
+                        <h4>Executive summary</h4>
+                        <p id="execSummary"></p>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card highlight">
+                            <div class="metric-label">Connected load</div>
+                            <div class="metric-value"><span id="connectedLoad">-</span><span class="metric-unit">kW</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Peak load</div>
+                            <div class="metric-value"><span id="peakLoadOut">-</span><span class="metric-unit">kW</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Average load</div>
+                            <div class="metric-value"><span id="avgLoadOut">-</span><span class="metric-unit">kW</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Standby load</div>
+                            <div class="metric-value"><span id="standbyLoad">-</span><span class="metric-unit">kW</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Load factor</div>
+                            <div class="metric-value"><span id="loadFactor">-</span><span class="metric-unit">%</span></div>
+                        </div>
+                        <div class="metric-card highlight">
+                            <div class="metric-label">Annual energy</div>
+                            <div class="metric-value"><span id="annualEnergy">-</span><span class="metric-unit">MWh</span></div>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 14px; margin-bottom: 12px;">Confidence assessment</h3>
+                    <div class="info-box">
+                        <p><span id="confidenceStatus" class="status medium">MEDIUM</span> <span id="confidenceText"></span></p>
+                    </div>
+                </div>
+
+                <!-- Assumptions Tab -->
+                <div id="assumptions" class="tab-content">
+                    <h3 style="font-size: 14px; margin-bottom: 16px;">Project information</h3>
+                    <table class="data-table">
+                        <tbody id="projectInfoTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 14px; margin-bottom: 16px; margin-top: 24px;">Electrical parameters</h3>
+                    <table class="data-table">
+                        <tbody id="electricalParamsTable"></tbody>
+                    </table>
+
+                    <h3 style="font-size: 14px; margin-bottom: 16px; margin-top: 24px;">Operating schedule</h3>
+                    <table class="data-table">
+                        <tbody id="scheduleTable"></tbody>
+                    </table>
+                </div>
+
+                <!-- Equipment Tab -->
+                <div id="equipment" class="tab-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Equipment</th>
+                                <th>Demand kW</th>
+                                <th>Night (00-05)</th>
+                                <th>Ramp-up (06)</th>
+                                <th>Production (07-17)</th>
+                                <th>Wind-down (18)</th>
+                                <th>Evening (19-23)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="equipmentTable"></tbody>
+                    </table>
+                </div>
+
+                <!-- Load Analysis Tab -->
+                <div id="loadAnalysis" class="tab-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Equipment description</th>
+                                <th>Est. rating (kW)</th>
+                                <th>Qty</th>
+                                <th>Total kW</th>
+                                <th>Operating factor</th>
+                                <th>Demand kW</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="loadAnalysisTable"></tbody>
+                    </table>
+                </div>
+
+                <!-- Hourly Profile Tab -->
+                <div id="hourlyProfile" class="tab-content">
+                    <div class="chart-container">
+                        <div class="chart-title">24-hour load profile (typical weekday)</div>
+                        <div class="chart" id="loadChart"></div>
+                        <div class="chart-labels">
+                            <span>00:00</span>
+                            <span>06:00</span>
+                            <span>12:00</span>
+                            <span>18:00</span>
+                            <span>23:00</span>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 14px; margin-bottom: 16px;">Weekly load profile (kW)</h3>
+                    <div class="weekly-table">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Hour</th>
+                                    <th>Mon</th>
+                                    <th>Tue</th>
+                                    <th>Wed</th>
+                                    <th>Thu</th>
+                                    <th>Fri</th>
+                                    <th>Sat</th>
+                                    <th>Sun</th>
+                                    <th>Avg</th>
+                                </tr>
+                            </thead>
+                            <tbody id="weeklyTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Summary Tab -->
+                <div id="summary" class="tab-content">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">Total connected load</div>
+                            <div class="metric-value"><span id="summaryConnected">-</span><span class="metric-unit">kW</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Maximum demand</div>
+                            <div class="metric-value"><span id="summaryMaxDemand">-</span><span class="metric-unit">kW</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Daily energy</div>
+                            <div class="metric-value"><span id="summaryDailyEnergy">-</span><span class="metric-unit">kWh</span></div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Monthly energy</div>
+                            <div class="metric-value"><span id="summaryMonthlyEnergy">-</span><span class="metric-unit">MWh</span></div>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 14px; margin-bottom: 16px;">Generator assessment</h3>
+                    <div id="generatorAssessment" class="info-box">
+                        <p>Generator capacity analysis will appear here if generator capacity is specified.</p>
+                    </div>
+
+                    <h3 style="font-size: 14px; margin-bottom: 16px; margin-top: 24px;">Key notes and assumptions</h3>
+                    <ul class="notes-list" id="keyNotes"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Country grid data including DRC
+        const countryData = {
+            'DRC': { gridHours: 8, voltage: '20 kV', diesel: 1.15 },
+            'Ethiopia': { gridHours: 21, voltage: '33 kV / 15 kV', diesel: 1.25 },
+            'Ghana': { gridHours: 20, voltage: '33 kV / 11 kV', diesel: 1.20 },
+            'Kenya': { gridHours: 22, voltage: '33 kV / 11 kV', diesel: 1.30 },
+            'Liberia': { gridHours: 15, voltage: '22 kV', diesel: 1.05 },
+            'Nigeria': { gridHours: 10, voltage: '33 kV / 11 kV', diesel: 0.90 },
+            'Senegal': { gridHours: 22, voltage: '30 kV', diesel: 1.30 },
+            'South Africa': { gridHours: 20, voltage: '22 kV / 11 kV', diesel: 1.40 },
+            'Tanzania': { gridHours: 18, voltage: '33 kV / 11 kV', diesel: 1.25 }
+        };
+
+        // Industry equipment templates
+        const industryTemplates = {
+            cement_factory: {
+                name: 'Cement factory',
+                continuous: true,
+                equipment: [
+                    { name: 'Cement mill (primary)', pct: 0.44, factors: { night: 0.65, ramp: 0.70, prod: 0.70, wind: 0.65, eve: 0.65 } },
+                    { name: 'Cement mill (secondary)', pct: 0.24, factors: { night: 0.40, ramp: 0.45, prod: 0.45, wind: 0.40, eve: 0.40 } },
+                    { name: 'Raw material handling', pct: 0.07, factors: { night: 0.50, ramp: 0.65, prod: 0.65, wind: 0.60, eve: 0.50 } },
+                    { name: 'Clinker handling system', pct: 0.05, factors: { night: 0.50, ramp: 0.65, prod: 0.65, wind: 0.60, eve: 0.50 } },
+                    { name: 'Packing/bagging line', pct: 0.06, factors: { night: 0.20, ramp: 0.55, prod: 0.55, wind: 0.40, eve: 0.20 } },
+                    { name: 'Conveyor systems', pct: 0.04, factors: { night: 0.50, ramp: 0.65, prod: 0.65, wind: 0.55, eve: 0.50 } },
+                    { name: 'Compressed air system', pct: 0.03, factors: { night: 0.60, ramp: 0.75, prod: 0.75, wind: 0.70, eve: 0.60 } },
+                    { name: 'Dust collection/filters', pct: 0.036, factors: { night: 0.75, ramp: 0.80, prod: 0.80, wind: 0.75, eve: 0.75 } },
+                    { name: 'Process water pumps', pct: 0.024, factors: { night: 0.50, ramp: 0.65, prod: 0.65, wind: 0.60, eve: 0.50 } },
+                    { name: 'Cooling systems', pct: 0.02, factors: { night: 0.60, ramp: 0.75, prod: 0.75, wind: 0.70, eve: 0.60 } },
+                    { name: 'Office/admin (AC, computers)', pct: 0.03, factors: { night: 0.20, ramp: 0.75, prod: 0.75, wind: 0.50, eve: 0.20 } },
+                    { name: 'Site lighting', pct: 0.016, factors: { night: 0.80, ramp: 0.20, prod: 0.20, wind: 0.60, eve: 0.80 } },
+                    { name: 'Security systems', pct: 0.004, factors: { night: 1.00, ramp: 1.00, prod: 1.00, wind: 1.00, eve: 1.00 } },
+                    { name: 'Workshops/maintenance', pct: 0.01, factors: { night: 0.10, ramp: 0.55, prod: 0.55, wind: 0.30, eve: 0.10 } },
+                    { name: 'Miscellaneous/auxiliaries', pct: 0.02, factors: { night: 0.40, ramp: 0.55, prod: 0.55, wind: 0.45, eve: 0.40 } }
+                ]
+            },
+            hotel_luxury: {
+                name: 'Hotel (luxury/resort)',
+                continuous: true,
+                equipment: [
+                    { name: 'Central air conditioning', pct: 0.40, factors: { night: 0.50, ramp: 0.60, prod: 0.70, wind: 0.75, eve: 0.70 } },
+                    { name: 'Kitchen equipment', pct: 0.16, factors: { night: 0.15, ramp: 0.70, prod: 0.50, wind: 0.80, eve: 0.40 } },
+                    { name: 'Laundry', pct: 0.08, factors: { night: 0.05, ramp: 0.60, prod: 0.40, wind: 0.20, eve: 0.05 } },
+                    { name: 'Lighting (common areas)', pct: 0.06, factors: { night: 0.30, ramp: 0.50, prod: 0.60, wind: 0.80, eve: 0.80 } },
+                    { name: 'Room HVAC units', pct: 0.12, factors: { night: 0.60, ramp: 0.50, prod: 0.45, wind: 0.55, eve: 0.65 } },
+                    { name: 'Elevators', pct: 0.05, factors: { night: 0.15, ramp: 0.40, prod: 0.30, wind: 0.35, eve: 0.25 } },
+                    { name: 'Water pumping', pct: 0.04, factors: { night: 0.50, ramp: 0.75, prod: 0.70, wind: 0.75, eve: 0.60 } },
+                    { name: 'Pool equipment', pct: 0.03, factors: { night: 0.30, ramp: 0.50, prod: 0.50, wind: 0.50, eve: 0.30 } },
+                    { name: 'Security/CCTV', pct: 0.01, factors: { night: 1.00, ramp: 1.00, prod: 1.00, wind: 1.00, eve: 1.00 } },
+                    { name: 'IT/communications', pct: 0.02, factors: { night: 0.90, ramp: 0.90, prod: 0.90, wind: 0.90, eve: 0.90 } },
+                    { name: 'Refrigeration', pct: 0.03, factors: { night: 0.85, ramp: 0.85, prod: 0.85, wind: 0.85, eve: 0.85 } }
+                ]
+            },
+            gold_mine: {
+                name: 'Gold mine',
+                continuous: true,
+                equipment: [
+                    { name: 'Crushers', pct: 0.27, factors: { night: 0.60, ramp: 0.65, prod: 0.65, wind: 0.60, eve: 0.60 } },
+                    { name: 'Ball/SAG mill', pct: 0.20, factors: { night: 0.65, ramp: 0.70, prod: 0.70, wind: 0.65, eve: 0.65 } },
+                    { name: 'Conveyors', pct: 0.10, factors: { night: 0.70, ramp: 0.75, prod: 0.75, wind: 0.70, eve: 0.70 } },
+                    { name: 'Pumps (dewatering)', pct: 0.08, factors: { night: 0.80, ramp: 0.80, prod: 0.80, wind: 0.80, eve: 0.80 } },
+                    { name: 'Ventilation fans', pct: 0.07, factors: { night: 0.85, ramp: 0.85, prod: 0.85, wind: 0.85, eve: 0.85 } },
+                    { name: 'Processing plant', pct: 0.13, factors: { night: 0.55, ramp: 0.60, prod: 0.60, wind: 0.55, eve: 0.55 } },
+                    { name: 'Compressors', pct: 0.05, factors: { night: 0.65, ramp: 0.70, prod: 0.70, wind: 0.65, eve: 0.65 } },
+                    { name: 'Workshops', pct: 0.03, factors: { night: 0.10, ramp: 0.40, prod: 0.40, wind: 0.30, eve: 0.10 } },
+                    { name: 'Camp/accommodation', pct: 0.05, factors: { night: 0.60, ramp: 0.45, prod: 0.40, wind: 0.50, eve: 0.65 } },
+                    { name: 'Lighting', pct: 0.02, factors: { night: 0.80, ramp: 0.40, prod: 0.40, wind: 0.60, eve: 0.80 } }
+                ]
+            }
+        };
+
+        // Default template for industries without specific templates
+        const defaultTemplate = {
+            name: 'General facility',
+            continuous: false,
+            equipment: [
+                { name: 'Main process equipment', pct: 0.45, factors: { night: 0.10, ramp: 0.70, prod: 0.80, wind: 0.50, eve: 0.15 } },
+                { name: 'Secondary equipment', pct: 0.20, factors: { night: 0.05, ramp: 0.60, prod: 0.70, wind: 0.40, eve: 0.10 } },
+                { name: 'Compressed air/utilities', pct: 0.08, factors: { night: 0.20, ramp: 0.70, prod: 0.75, wind: 0.50, eve: 0.25 } },
+                { name: 'HVAC/cooling', pct: 0.10, factors: { night: 0.30, ramp: 0.65, prod: 0.70, wind: 0.55, eve: 0.35 } },
+                { name: 'Lighting', pct: 0.05, factors: { night: 0.20, ramp: 0.60, prod: 0.70, wind: 0.70, eve: 0.50 } },
+                { name: 'Office/admin', pct: 0.05, factors: { night: 0.10, ramp: 0.60, prod: 0.75, wind: 0.40, eve: 0.15 } },
+                { name: 'Security systems', pct: 0.02, factors: { night: 1.00, ramp: 1.00, prod: 1.00, wind: 1.00, eve: 1.00 } },
+                { name: 'Miscellaneous', pct: 0.05, factors: { night: 0.15, ramp: 0.50, prod: 0.55, wind: 0.40, eve: 0.20 } }
+            ]
+        };
+
+        let generatedData = null;
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function getTemplate(industryType) {
+            return industryTemplates[industryType] || defaultTemplate;
+        }
+
+        function generateProfile(inputs) {
+            const template = getTemplate(inputs.industryType);
+            const loadFactor = inputs.avgLoad / inputs.peakLoad;
+            
+            // Determine operating mode
+            let isContinuous = template.continuous;
+            if (inputs.shifts === '3') isContinuous = true;
+            else if (inputs.shifts === '1' || inputs.shifts === '2') isContinuous = false;
+            else if (loadFactor > 0.7) isContinuous = true;
+
+            // Scale equipment to match peak load
+            const scaledEquipment = template.equipment.map(eq => ({
+                ...eq,
+                kW: Math.round(inputs.peakLoad * eq.pct)
+            }));
+
+            // Adjust operating factors to match average load
+            const baseAvg = calculateAverageLoad(scaledEquipment, isContinuous);
+            const adjustmentFactor = inputs.avgLoad / baseAvg;
+
+            scaledEquipment.forEach(eq => {
+                Object.keys(eq.factors).forEach(period => {
+                    eq.factors[period] = Math.min(1, eq.factors[period] * adjustmentFactor);
+                });
+            });
+
+            // Generate hourly profile
+            const hourlyProfile = generateHourlyProfile(scaledEquipment, isContinuous, inputs);
+
+            // Calculate totals
+            const connectedLoad = scaledEquipment.reduce((sum, eq) => sum + eq.kW, 0);
+            const standbyLoad = calculatePeriodLoad(scaledEquipment, 'night');
+            const calculatedPeak = Math.max(...hourlyProfile.weekday);
+            const calculatedAvg = hourlyProfile.weekday.reduce((a, b) => a + b, 0) / 24;
+            const dailyEnergy = calculatedAvg * 24;
+            const annualEnergy = dailyEnergy * 365 / 1000;
+
+            return {
+                inputs,
+                template,
+                equipment: scaledEquipment,
+                hourlyProfile,
+                metrics: {
+                    connectedLoad,
+                    peakLoad: calculatedPeak,
+                    avgLoad: calculatedAvg,
+                    standbyLoad,
+                    loadFactor: (calculatedAvg / calculatedPeak) * 100,
+                    dailyEnergy,
+                    annualEnergy
+                },
+                isContinuous
+            };
+        }
+
+        function calculatePeriodLoad(equipment, period) {
+            return equipment.reduce((sum, eq) => sum + (eq.kW * eq.factors[period]), 0);
+        }
+
+        function calculateAverageLoad(equipment, isContinuous) {
+            if (isContinuous) {
+                // Weight: 6h night, 1h ramp, 11h prod, 1h wind, 5h eve
+                const nightLoad = calculatePeriodLoad(equipment, 'night');
+                const rampLoad = calculatePeriodLoad(equipment, 'ramp');
+                const prodLoad = calculatePeriodLoad(equipment, 'prod');
+                const windLoad = calculatePeriodLoad(equipment, 'wind');
+                const eveLoad = calculatePeriodLoad(equipment, 'eve');
+                return (nightLoad * 6 + rampLoad * 1 + prodLoad * 11 + windLoad * 1 + eveLoad * 5) / 24;
+            } else {
+                // Single shift: more night/evening hours at low load
+                const nightLoad = calculatePeriodLoad(equipment, 'night');
+                const rampLoad = calculatePeriodLoad(equipment, 'ramp');
+                const prodLoad = calculatePeriodLoad(equipment, 'prod');
+                const windLoad = calculatePeriodLoad(equipment, 'wind');
+                const eveLoad = calculatePeriodLoad(equipment, 'eve');
+                return (nightLoad * 8 + rampLoad * 1 + prodLoad * 10 + windLoad * 1 + eveLoad * 4) / 24;
+            }
+        }
+
+        function generateHourlyProfile(equipment, isContinuous, inputs) {
+            const weekday = [];
+            const weekend = [];
+            const opDays = parseInt(inputs.operatingDays);
+
+            for (let hour = 0; hour < 24; hour++) {
+                let period;
+                if (hour >= 0 && hour <= 5) period = 'night';
+                else if (hour === 6) period = 'ramp';
+                else if (hour >= 7 && hour <= 17) period = 'prod';
+                else if (hour === 18) period = 'wind';
+                else period = 'eve';
+
+                const load = calculatePeriodLoad(equipment, period);
+                weekday.push(Math.round(load));
+
+                // Weekend reduction
+                let weekendLoad = load;
+                if (opDays < 7) {
+                    weekendLoad = load * 0.3; // Reduced weekend operation
+                }
+                weekend.push(Math.round(weekendLoad));
+            }
+
+            return { weekday, weekend };
+        }
+
+        function renderOutput(data) {
+            const { inputs, equipment, hourlyProfile, metrics, isContinuous } = data;
+            const countryInfo = countryData[inputs.country] || { gridHours: 16, voltage: '33 kV', diesel: 1.20 };
+            const gridHours = inputs.gridHours || countryInfo.gridHours;
+
+            // Documentation tab
+            document.getElementById('facilityTitle').textContent = 
+                `${getTemplate(inputs.industryType).name} - ${inputs.city || inputs.country}`;
+
+            document.getElementById('execSummary').textContent = 
+                `This load profile represents a ${getTemplate(inputs.industryType).name.toLowerCase()} located in ${inputs.city ? inputs.city + ', ' : ''}${inputs.country}. ` +
+                `The facility operates ${isContinuous ? 'continuously (24/7)' : 'during standard business hours'} with an estimated peak demand of ${metrics.peakLoad.toLocaleString()} kW ` +
+                `and average load of ${Math.round(metrics.avgLoad).toLocaleString()} kW.`;
+
+            document.getElementById('connectedLoad').textContent = metrics.connectedLoad.toLocaleString();
+            document.getElementById('peakLoadOut').textContent = metrics.peakLoad.toLocaleString();
+            document.getElementById('avgLoadOut').textContent = Math.round(metrics.avgLoad).toLocaleString();
+            document.getElementById('standbyLoad').textContent = Math.round(metrics.standbyLoad).toLocaleString();
+            document.getElementById('loadFactor').textContent = metrics.loadFactor.toFixed(1);
+            document.getElementById('annualEnergy').textContent = metrics.annualEnergy.toFixed(1);
+
+            // Confidence
+            const confidence = metrics.loadFactor > 30 && metrics.loadFactor < 90 ? 'medium' : 'low';
+            const confidenceStatus = document.getElementById('confidenceStatus');
+            confidenceStatus.textContent = confidence.toUpperCase();
+            confidenceStatus.className = `status ${confidence}`;
+            document.getElementById('confidenceText').textContent = 
+                confidence === 'medium' 
+                    ? 'Suitable for feasibility assessment. Client-provided peak/average loads with industry-typical assumptions.'
+                    : 'Requires validation before use. Load factor outside typical range.';
+
+            // Assumptions tab
+            document.getElementById('projectInfoTable').innerHTML = `
+                <tr><td>Company location</td><td>${inputs.city ? inputs.city + ', ' : ''}${inputs.country}</td></tr>
+                <tr><td>Industry type</td><td>${getTemplate(inputs.industryType).name}</td></tr>
+                <tr><td>Operation mode</td><td>${isContinuous ? 'Continuous (24/7)' : 'Standard shifts'}</td></tr>
+                <tr><td>Grid availability</td><td>${gridHours} hours/day (typical for ${inputs.country})</td></tr>
+            `;
+
+            document.getElementById('electricalParamsTable').innerHTML = `
+                <tr><td>Grid voltage</td><td>${countryInfo.voltage}</td></tr>
+                <tr><td>Frequency</td><td>50 Hz</td></tr>
+                <tr><td>Target power factor</td><td>0.90</td></tr>
+                <tr><td>Diversity factor</td><td>0.85</td></tr>
+            `;
+
+            document.getElementById('scheduleTable').innerHTML = `
+                <tr><td>Operating days</td><td>${inputs.operatingDays} days/week</td></tr>
+                <tr><td>Shift pattern</td><td>${isContinuous ? 'Continuous operation' : inputs.shifts === '2' ? 'Double shift' : 'Single shift'}</td></tr>
+                <tr><td>Annual operating hours</td><td>${isContinuous ? '8,760' : '4,380'} hours</td></tr>
+            `;
+
+            // Equipment tab
+            document.getElementById('equipmentTable').innerHTML = equipment.map(eq => `
+                <tr>
+                    <td>${eq.name}</td>
+                    <td class="number">${eq.kW.toLocaleString()}</td>
+                    <td class="number">${eq.factors.night.toFixed(2)}</td>
+                    <td class="number">${eq.factors.ramp.toFixed(2)}</td>
+                    <td class="number">${eq.factors.prod.toFixed(2)}</td>
+                    <td class="number">${eq.factors.wind.toFixed(2)}</td>
+                    <td class="number">${eq.factors.eve.toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            // Load analysis tab
+            document.getElementById('loadAnalysisTable').innerHTML = equipment.map((eq, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${eq.name}</td>
+                    <td class="number">${eq.kW.toLocaleString()}</td>
+                    <td class="number">1</td>
+                    <td class="number">${eq.kW.toLocaleString()}</td>
+                    <td class="number">${eq.factors.prod.toFixed(2)}</td>
+                    <td class="number">${Math.round(eq.kW * eq.factors.prod).toLocaleString()}</td>
+                    <td>Estimated from industry template</td>
+                </tr>
+            `).join('');
+
+            // Hourly profile chart
+            const maxLoad = Math.max(...hourlyProfile.weekday);
+            const chartContainer = document.getElementById('loadChart');
+            chartContainer.innerHTML = hourlyProfile.weekday.map((load, i) => {
+                const height = (load / maxLoad) * 100;
+                return `<div class="chart-bar" style="height: ${height}%" data-value="${load} kW"></div>`;
+            }).join('');
+
+            // Weekly table
+            const opDays = parseInt(inputs.operatingDays);
+            document.getElementById('weeklyTable').innerHTML = Array.from({ length: 24 }, (_, hour) => {
+                const hourStr = hour.toString().padStart(2, '0') + ':00';
+                const weekdayLoad = hourlyProfile.weekday[hour];
+                const weekendLoad = hourlyProfile.weekend[hour];
+                const isPeak = weekdayLoad === maxLoad;
+                const isLow = weekdayLoad === Math.min(...hourlyProfile.weekday);
+
+                let cells = `<td>${hourStr}</td>`;
+                for (let day = 0; day < 5; day++) {
+                    cells += `<td class="number ${isPeak ? 'peak' : isLow ? 'low' : ''}">${weekdayLoad.toLocaleString()}</td>`;
+                }
+                cells += `<td class="number">${opDays >= 6 ? weekdayLoad.toLocaleString() : weekendLoad.toLocaleString()}</td>`;
+                cells += `<td class="number">${opDays >= 7 ? weekdayLoad.toLocaleString() : weekendLoad.toLocaleString()}</td>`;
+                
+                const avgDay = (weekdayLoad * 5 + (opDays >= 6 ? weekdayLoad : weekendLoad) + (opDays >= 7 ? weekdayLoad : weekendLoad)) / 7;
+                cells += `<td class="number">${Math.round(avgDay).toLocaleString()}</td>`;
+                
+                return `<tr>${cells}</tr>`;
+            }).join('');
+
+            // Summary tab
+            document.getElementById('summaryConnected').textContent = metrics.connectedLoad.toLocaleString();
+            document.getElementById('summaryMaxDemand').textContent = metrics.peakLoad.toLocaleString();
+            document.getElementById('summaryDailyEnergy').textContent = Math.round(metrics.dailyEnergy).toLocaleString();
+            document.getElementById('summaryMonthlyEnergy').textContent = (metrics.dailyEnergy * 30 / 1000).toFixed(1);
+
+            // Generator assessment
+            if (inputs.genCapacity) {
+                const genKW = inputs.genCapacity * 0.8; // kVA to kW at 0.8 PF
+                const margin = ((genKW - metrics.peakLoad) / metrics.peakLoad * 100).toFixed(1);
+                const status = genKW >= metrics.peakLoad * 1.1 ? 'ADEQUATE' : genKW >= metrics.peakLoad ? 'MARGINAL' : 'INSUFFICIENT';
+                document.getElementById('generatorAssessment').innerHTML = `
+                    <p><strong>Installed capacity:</strong> ${inputs.genCapacity.toLocaleString()} kVA (${Math.round(genKW).toLocaleString()} kW at 0.8 PF)</p>
+                    <p><strong>Peak requirement:</strong> ${metrics.peakLoad.toLocaleString()} kW</p>
+                    <p><strong>Margin:</strong> ${margin}% <span class="status ${status === 'ADEQUATE' ? 'high' : status === 'MARGINAL' ? 'medium' : 'low'}">${status}</span></p>
+                `;
+            }
+
+            // Key notes
+            document.getElementById('keyNotes').innerHTML = `
+                <li>Equipment ratings are estimated based on industry templates scaled to client-provided peak load</li>
+                <li>Operating factors derived to match stated average load of ${inputs.avgLoad.toLocaleString()} kW</li>
+                <li>Grid availability assumed at ${gridHours} hours/day based on typical conditions in ${inputs.country}</li>
+                <li>Diesel fuel cost reference: $${countryInfo.diesel.toFixed(2)}/L</li>
+                <li>Power factor assumed at 0.90; actual may vary by equipment</li>
+                <li>Profile represents typical operation; seasonal variations not included</li>
+                <li>Recommend detailed energy audit before final system design</li>
+            `;
+
+            // Show output
+            document.getElementById('placeholder').style.display = 'none';
+            document.getElementById('outputContent').style.display = 'block';
+        }
+
+        function exportToCSV() {
+            if (!generatedData) return;
+
+            const { inputs, equipment, hourlyProfile, metrics } = generatedData;
+            let csv = 'Solar C&I Load Profile Export\n\n';
+
+            csv += 'Summary\n';
+            csv += `Location,${inputs.city || ''},${inputs.country}\n`;
+            csv += `Industry,${getTemplate(inputs.industryType).name}\n`;
+            csv += `Connected Load (kW),${metrics.connectedLoad}\n`;
+            csv += `Peak Load (kW),${metrics.peakLoad}\n`;
+            csv += `Average Load (kW),${Math.round(metrics.avgLoad)}\n`;
+            csv += `Load Factor (%),${metrics.loadFactor.toFixed(1)}\n`;
+            csv += `Annual Energy (MWh),${metrics.annualEnergy.toFixed(1)}\n\n`;
+
+            csv += 'Equipment Schedule\n';
+            csv += 'Equipment,Demand kW,Night,Ramp-up,Production,Wind-down,Evening\n';
+            equipment.forEach(eq => {
+                csv += `${eq.name},${eq.kW},${eq.factors.night.toFixed(2)},${eq.factors.ramp.toFixed(2)},${eq.factors.prod.toFixed(2)},${eq.factors.wind.toFixed(2)},${eq.factors.eve.toFixed(2)}\n`;
+            });
+
+            csv += '\nHourly Profile (kW)\n';
+            csv += 'Hour,Weekday,Weekend\n';
+            for (let i = 0; i < 24; i++) {
+                csv += `${i.toString().padStart(2, '0')}:00,${hourlyProfile.weekday[i]},${hourlyProfile.weekend[i]}\n`;
+            }
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `load_profile_${inputs.industryType}_${inputs.country}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        document.getElementById('loadProfileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const inputs = {
+                country: document.getElementById('country').value,
+                city: document.getElementById('city').value,
+                industryType: document.getElementById('industryType').value,
+                peakLoad: parseFloat(document.getElementById('peakLoad').value),
+                avgLoad: parseFloat(document.getElementById('avgLoad').value),
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                shifts: document.getElementById('shifts').value,
+                gridHours: document.getElementById('gridHours').value ? parseInt(document.getElementById('gridHours').value) : null,
+                genCapacity: document.getElementById('genCapacity').value ? parseFloat(document.getElementById('genCapacity').value) : null,
+                operatingDays: document.getElementById('operatingDays').value
+            };
+
+            // Validation
+            if (inputs.avgLoad > inputs.peakLoad) {
+                alert('Average load cannot exceed peak load.');
+                return;
+            }
+
+            generatedData = generateProfile(inputs);
+            renderOutput(generatedData);
+        });
+    </script>
+</body>
+</html>
