@@ -6,7 +6,27 @@
     <title>Solar C&I Load Profile Generator</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
+        /* Light theme (default for system light preference) */
         :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #eaeef2;
+            --border-color: #d0d7de;
+            --text-primary: #1f2328;
+            --text-secondary: #656d76;
+            --text-muted: #8b949e;
+            --accent-solar: #d4890a;
+            --accent-solar-dim: rgba(212, 137, 10, 0.12);
+            --accent-green: #1a7f37;
+            --accent-red: #cf222e;
+            --accent-blue: #0969da;
+            --chart-gradient-end: rgba(212, 137, 10, 0.15);
+            --scrollbar-track: #f0f0f0;
+            --generate-btn-text: #000;
+        }
+
+        /* Dark theme */
+        [data-theme="dark"] {
             --bg-primary: #0d1117;
             --bg-secondary: #161b22;
             --bg-tertiary: #21262d;
@@ -19,6 +39,30 @@
             --accent-green: #3fb950;
             --accent-red: #f85149;
             --accent-blue: #58a6ff;
+            --chart-gradient-end: rgba(247, 179, 43, 0.3);
+            --scrollbar-track: #0d1117;
+            --generate-btn-text: #000;
+        }
+
+        /* System preference: auto-apply dark if user hasn't chosen */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg-primary: #0d1117;
+                --bg-secondary: #161b22;
+                --bg-tertiary: #21262d;
+                --border-color: #30363d;
+                --text-primary: #e6edf3;
+                --text-secondary: #8b949e;
+                --text-muted: #6e7681;
+                --accent-solar: #f7b32b;
+                --accent-solar-dim: rgba(247, 179, 43, 0.15);
+                --accent-green: #3fb950;
+                --accent-red: #f85149;
+                --accent-blue: #58a6ff;
+                --chart-gradient-end: rgba(247, 179, 43, 0.3);
+                --scrollbar-track: #0d1117;
+                --generate-btn-text: #000;
+            }
         }
 
         * {
@@ -152,13 +196,19 @@
             background: linear-gradient(135deg, var(--accent-solar) 0%, #e09800 100%);
             border: none;
             border-radius: 8px;
-            color: #000;
+            color: var(--generate-btn-text);
             font-family: 'IBM Plex Sans', sans-serif;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             margin-top: 24px;
             transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .generate-btn:hover {
@@ -360,7 +410,7 @@
 
         .chart-bar {
             flex: 1;
-            background: linear-gradient(180deg, var(--accent-solar) 0%, rgba(247, 179, 43, 0.3) 100%);
+            background: linear-gradient(180deg, var(--accent-solar) 0%, var(--chart-gradient-end) 100%);
             border-radius: 2px 2px 0 0;
             transition: opacity 0.2s;
             position: relative;
@@ -469,7 +519,7 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--bg-primary);
+            background: var(--scrollbar-track, var(--bg-primary));
         }
 
         ::-webkit-scrollbar-thumb {
@@ -518,6 +568,115 @@
             color: var(--accent-solar);
         }
 
+        /* Theme toggle */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            margin-left: auto;
+        }
+
+        .theme-toggle:hover {
+            background: var(--border-color);
+        }
+
+        .theme-toggle-icon {
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .logo-section {
+            flex-wrap: wrap;
+        }
+
+        /* Inline validation */
+        .field-error {
+            color: var(--accent-red);
+            font-size: 11px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .field-error.visible {
+            display: block;
+        }
+
+        .form-group.has-error input,
+        .form-group.has-error select {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 3px rgba(207, 34, 46, 0.15);
+        }
+
+        /* Template warning banner */
+        .template-warning {
+            background: rgba(207, 34, 46, 0.1);
+            border: 1px solid rgba(207, 34, 46, 0.3);
+            border-left: 3px solid var(--accent-red);
+            border-radius: 0 8px 8px 0;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        .template-warning.visible {
+            display: block;
+        }
+
+        .template-warning strong {
+            color: var(--accent-red);
+        }
+
+        /* Chart improvements */
+        .chart-wrapper {
+            position: relative;
+            padding-left: 50px;
+        }
+
+        .chart-y-axis {
+            position: absolute;
+            left: 0;
+            top: 24px;
+            bottom: 0;
+            width: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-right: 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+
+        .chart-gridlines {
+            position: absolute;
+            left: 50px;
+            right: 0;
+            top: 24px;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        .chart-gridline {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--border-color);
+            opacity: 0.5;
+        }
+
         @media (max-width: 900px) {
             .app-container {
                 grid-template-columns: 1fr;
@@ -534,11 +693,15 @@
     <div class="app-container">
         <div class="input-panel">
             <div class="logo-section">
-                <div class="logo-icon">☀</div>
+                <div class="logo-icon" role="img" aria-label="Solar energy icon">☀</div>
                 <div class="logo-text">
                     <h1>Load Profile Generator</h1>
                     <span>Solar C&I / Sub-Saharan Africa</span>
                 </div>
+                <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light/dark mode">
+                    <span class="theme-toggle-icon" id="themeIcon">🌙</span>
+                    <span id="themeLabel">Dark</span>
+                </button>
             </div>
 
             <form id="loadProfileForm">
@@ -705,13 +868,15 @@
                 </div>
 
                 <div class="input-row">
-                    <div class="form-group">
-                        <label>Peak load (kW) <span class="required">*</span></label>
-                        <input type="number" id="peakLoad" required min="1" placeholder="5000">
+                    <div class="form-group" id="peakLoadGroup">
+                        <label for="peakLoad">Peak load (kW) <span class="required">*</span></label>
+                        <input type="number" id="peakLoad" required min="1" placeholder="5000" aria-required="true">
+                        <div class="field-error" id="peakLoadError">Peak load must be at least 1 kW</div>
                     </div>
-                    <div class="form-group">
-                        <label>Average load (kW) <span class="required">*</span></label>
-                        <input type="number" id="avgLoad" required min="1" placeholder="3400">
+                    <div class="form-group" id="avgLoadGroup">
+                        <label for="avgLoad">Average load (kW) <span class="required">*</span></label>
+                        <input type="number" id="avgLoad" required min="1" placeholder="3400" aria-required="true">
+                        <div class="field-error" id="avgLoadError">Average load cannot exceed peak load</div>
                     </div>
                 </div>
 
@@ -764,7 +929,7 @@
 
         <div class="output-panel">
             <div id="placeholder" class="placeholder">
-                <div class="placeholder-icon">📊</div>
+                <div class="placeholder-icon" aria-hidden="true">📊</div>
                 <h3>Enter facility details to generate a load profile</h3>
                 <p>Fill in the required fields on the left panel and click "Generate load profile" to create a comprehensive electrical load analysis.</p>
             </div>
@@ -775,17 +940,21 @@
                     <button class="export-btn" onclick="exportToCSV()">↓ Export CSV</button>
                 </div>
 
-                <div class="tabs">
-                    <button class="tab active" onclick="showTab('documentation')">Documentation</button>
-                    <button class="tab" onclick="showTab('assumptions')">Assumptions</button>
-                    <button class="tab" onclick="showTab('equipment')">Equipment</button>
-                    <button class="tab" onclick="showTab('loadAnalysis')">Load analysis</button>
-                    <button class="tab" onclick="showTab('hourlyProfile')">Hourly profile</button>
-                    <button class="tab" onclick="showTab('summary')">Summary</button>
+                <div class="template-warning" id="templateWarning">
+                    <strong>Note:</strong> No industry-specific equipment template exists for this facility type. A generic template has been applied. Results should be treated as rough estimates only.
+                </div>
+
+                <div class="tabs" role="tablist" aria-label="Output sections">
+                    <button class="tab active" role="tab" aria-selected="true" aria-controls="documentation" id="tab-documentation" tabindex="0" onclick="showTab('documentation')">Documentation</button>
+                    <button class="tab" role="tab" aria-selected="false" aria-controls="assumptions" id="tab-assumptions" tabindex="-1" onclick="showTab('assumptions')">Assumptions</button>
+                    <button class="tab" role="tab" aria-selected="false" aria-controls="equipment" id="tab-equipment" tabindex="-1" onclick="showTab('equipment')">Equipment</button>
+                    <button class="tab" role="tab" aria-selected="false" aria-controls="loadAnalysis" id="tab-loadAnalysis" tabindex="-1" onclick="showTab('loadAnalysis')">Load analysis</button>
+                    <button class="tab" role="tab" aria-selected="false" aria-controls="hourlyProfile" id="tab-hourlyProfile" tabindex="-1" onclick="showTab('hourlyProfile')">Hourly profile</button>
+                    <button class="tab" role="tab" aria-selected="false" aria-controls="summary" id="tab-summary" tabindex="-1" onclick="showTab('summary')">Summary</button>
                 </div>
 
                 <!-- Documentation Tab -->
-                <div id="documentation" class="tab-content active">
+                <div id="documentation" class="tab-content active" role="tabpanel" aria-labelledby="tab-documentation">
                     <div class="info-box">
                         <h4>Executive summary</h4>
                         <p id="execSummary"></p>
@@ -825,7 +994,7 @@
                 </div>
 
                 <!-- Assumptions Tab -->
-                <div id="assumptions" class="tab-content">
+                <div id="assumptions" class="tab-content" role="tabpanel" aria-labelledby="tab-assumptions">
                     <h3 style="font-size: 14px; margin-bottom: 16px;">Project information</h3>
                     <table class="data-table">
                         <tbody id="projectInfoTable"></tbody>
@@ -843,7 +1012,7 @@
                 </div>
 
                 <!-- Equipment Tab -->
-                <div id="equipment" class="tab-content">
+                <div id="equipment" class="tab-content" role="tabpanel" aria-labelledby="tab-equipment">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -861,7 +1030,7 @@
                 </div>
 
                 <!-- Load Analysis Tab -->
-                <div id="loadAnalysis" class="tab-content">
+                <div id="loadAnalysis" class="tab-content" role="tabpanel" aria-labelledby="tab-loadAnalysis">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -880,11 +1049,15 @@
                 </div>
 
                 <!-- Hourly Profile Tab -->
-                <div id="hourlyProfile" class="tab-content">
+                <div id="hourlyProfile" class="tab-content" role="tabpanel" aria-labelledby="tab-hourlyProfile">
                     <div class="chart-container">
                         <div class="chart-title">24-hour load profile (typical weekday)</div>
-                        <div class="chart" id="loadChart"></div>
-                        <div class="chart-labels">
+                        <div class="chart-wrapper">
+                            <div class="chart-y-axis" id="chartYAxis"></div>
+                            <div class="chart-gridlines" id="chartGridlines"></div>
+                            <div class="chart" id="loadChart"></div>
+                        </div>
+                        <div class="chart-labels" style="padding-left: 50px;">
                             <span>00:00</span>
                             <span>06:00</span>
                             <span>12:00</span>
@@ -915,7 +1088,7 @@
                 </div>
 
                 <!-- Summary Tab -->
-                <div id="summary" class="tab-content">
+                <div id="summary" class="tab-content" role="tabpanel" aria-labelledby="tab-summary">
                     <div class="metrics-grid">
                         <div class="metric-card">
                             <div class="metric-label">Total connected load</div>
@@ -948,7 +1121,51 @@
     </div>
 
     <script>
-        // Country grid data including DRC
+        // === XSS Protection ===
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // === Theme Management ===
+        function getEffectiveTheme() {
+            const stored = localStorage.getItem('lpg-theme');
+            if (stored) return stored;
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (icon && label) {
+                icon.textContent = theme === 'dark' ? '☀' : '🌙';
+                label.textContent = theme === 'dark' ? 'Light' : 'Dark';
+            }
+        }
+
+        // Apply theme immediately to prevent flash
+        applyTheme(getEffectiveTheme());
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', function() {
+                const current = getEffectiveTheme();
+                const next = current === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('lpg-theme', next);
+                applyTheme(next);
+            });
+
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                if (!localStorage.getItem('lpg-theme')) {
+                    applyTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+        });
+
+        // === Country Data ===
         const countryData = {
             'DRC': { gridHours: 8, voltage: '20 kV', diesel: 1.15 },
             'Ethiopia': { gridHours: 21, voltage: '33 kV / 15 kV', diesel: 1.25 },
@@ -962,7 +1179,7 @@
             'Tanzania': { gridHours: 18, voltage: '33 kV / 11 kV', diesel: 1.25 }
         };
 
-        // Industry equipment templates
+        // === Industry Equipment Templates ===
         const industryTemplates = {
             cement_factory: {
                 name: 'Cement factory',
@@ -1038,21 +1255,71 @@
 
         let generatedData = null;
 
+        // === Tab Management with ARIA and Keyboard Navigation ===
         function showTab(tabId) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.remove('active');
+                t.setAttribute('aria-selected', 'false');
+                t.setAttribute('tabindex', '-1');
+            });
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+
+            const tab = document.getElementById('tab-' + tabId);
+            tab.classList.add('active');
+            tab.setAttribute('aria-selected', 'true');
+            tab.setAttribute('tabindex', '0');
             document.getElementById(tabId).classList.add('active');
         }
+
+        // Keyboard navigation for tabs (arrow keys)
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabList = document.querySelector('[role="tablist"]');
+            if (tabList) {
+                tabList.addEventListener('keydown', function(e) {
+                    const tabs = Array.from(tabList.querySelectorAll('[role="tab"]'));
+                    const currentIdx = tabs.indexOf(document.activeElement);
+                    if (currentIdx === -1) return;
+
+                    let nextIdx;
+                    if (e.key === 'ArrowRight') {
+                        nextIdx = (currentIdx + 1) % tabs.length;
+                    } else if (e.key === 'ArrowLeft') {
+                        nextIdx = (currentIdx - 1 + tabs.length) % tabs.length;
+                    } else if (e.key === 'Home') {
+                        nextIdx = 0;
+                    } else if (e.key === 'End') {
+                        nextIdx = tabs.length - 1;
+                    } else {
+                        return;
+                    }
+
+                    e.preventDefault();
+                    tabs[nextIdx].focus();
+                    tabs[nextIdx].click();
+                });
+            }
+        });
 
         function getTemplate(industryType) {
             return industryTemplates[industryType] || defaultTemplate;
         }
 
+        function isGenericTemplate(industryType) {
+            return !industryTemplates[industryType];
+        }
+
+        // === Parse time string "HH:MM" to hour number ===
+        function parseTimeToHour(timeStr) {
+            if (!timeStr) return null;
+            const parts = timeStr.split(':');
+            return parseInt(parts[0], 10);
+        }
+
+        // === Core Generation Logic ===
         function generateProfile(inputs) {
             const template = getTemplate(inputs.industryType);
             const loadFactor = inputs.avgLoad / inputs.peakLoad;
-            
+
             // Determine operating mode
             let isContinuous = template.continuous;
             if (inputs.shifts === '3') isContinuous = true;
@@ -1066,7 +1333,9 @@
             }));
 
             // Adjust operating factors to match average load
-            const baseAvg = calculateAverageLoad(scaledEquipment, isContinuous);
+            const startHour = parseTimeToHour(inputs.startTime) || 6;
+            const endHour = parseTimeToHour(inputs.endTime) || 18;
+            const baseAvg = calculateAverageLoad(scaledEquipment, isContinuous, startHour, endHour);
             const adjustmentFactor = inputs.avgLoad / baseAvg;
 
             scaledEquipment.forEach(eq => {
@@ -1075,8 +1344,8 @@
                 });
             });
 
-            // Generate hourly profile
-            const hourlyProfile = generateHourlyProfile(scaledEquipment, isContinuous, inputs);
+            // Generate hourly profile using actual start/end times
+            const hourlyProfile = generateHourlyProfile(scaledEquipment, isContinuous, inputs, startHour, endHour);
 
             // Calculate totals
             const connectedLoad = scaledEquipment.reduce((sum, eq) => sum + eq.kW, 0);
@@ -1100,7 +1369,8 @@
                     dailyEnergy,
                     annualEnergy
                 },
-                isContinuous
+                isContinuous,
+                usedGenericTemplate: isGenericTemplate(inputs.industryType)
             };
         }
 
@@ -1108,46 +1378,71 @@
             return equipment.reduce((sum, eq) => sum + (eq.kW * eq.factors[period]), 0);
         }
 
-        function calculateAverageLoad(equipment, isContinuous) {
+        // Determine which period an hour falls into, based on user-provided start/end times
+        function getHourPeriod(hour, startHour, endHour, isContinuous) {
             if (isContinuous) {
-                // Weight: 6h night, 1h ramp, 11h prod, 1h wind, 5h eve
-                const nightLoad = calculatePeriodLoad(equipment, 'night');
-                const rampLoad = calculatePeriodLoad(equipment, 'ramp');
-                const prodLoad = calculatePeriodLoad(equipment, 'prod');
-                const windLoad = calculatePeriodLoad(equipment, 'wind');
-                const eveLoad = calculatePeriodLoad(equipment, 'eve');
-                return (nightLoad * 6 + rampLoad * 1 + prodLoad * 11 + windLoad * 1 + eveLoad * 5) / 24;
+                // Continuous: use start/end to define ramp/wind, production in between
+                const rampHour = startHour;
+                const windHour = endHour;
+                if (hour === rampHour) return 'ramp';
+                if (hour === windHour) return 'wind';
+                // Production hours: between ramp+1 and wind-1
+                if (startHour < endHour) {
+                    if (hour > rampHour && hour < windHour) return 'prod';
+                } else {
+                    if (hour > rampHour || hour < windHour) return 'prod';
+                }
+                // Evening: wind+1 to midnight-ish
+                if (endHour < startHour) {
+                    if (hour > windHour && hour < rampHour) return 'night';
+                } else {
+                    if (hour > windHour && hour <= 23) return 'eve';
+                    if (hour >= 0 && hour < rampHour) return 'night';
+                }
+                return 'night';
             } else {
-                // Single shift: more night/evening hours at low load
-                const nightLoad = calculatePeriodLoad(equipment, 'night');
-                const rampLoad = calculatePeriodLoad(equipment, 'ramp');
-                const prodLoad = calculatePeriodLoad(equipment, 'prod');
-                const windLoad = calculatePeriodLoad(equipment, 'wind');
-                const eveLoad = calculatePeriodLoad(equipment, 'eve');
-                return (nightLoad * 8 + rampLoad * 1 + prodLoad * 10 + windLoad * 1 + eveLoad * 4) / 24;
+                // Non-continuous: clear off-hours
+                const rampHour = startHour;
+                const windHour = endHour;
+                if (hour === rampHour) return 'ramp';
+                if (hour === windHour) return 'wind';
+                if (startHour < endHour) {
+                    if (hour > rampHour && hour < windHour) return 'prod';
+                } else {
+                    if (hour > rampHour || hour < windHour) return 'prod';
+                }
+                if (hour > windHour && hour <= 23) return 'eve';
+                return 'night';
             }
         }
 
-        function generateHourlyProfile(equipment, isContinuous, inputs) {
+        function calculateAverageLoad(equipment, isContinuous, startHour, endHour) {
+            let totalLoad = 0;
+            for (let hour = 0; hour < 24; hour++) {
+                const period = getHourPeriod(hour, startHour, endHour, isContinuous);
+                totalLoad += calculatePeriodLoad(equipment, period);
+            }
+            return totalLoad / 24;
+        }
+
+        function generateHourlyProfile(equipment, isContinuous, inputs, startHour, endHour) {
             const weekday = [];
             const weekend = [];
             const opDays = parseInt(inputs.operatingDays);
 
             for (let hour = 0; hour < 24; hour++) {
-                let period;
-                if (hour >= 0 && hour <= 5) period = 'night';
-                else if (hour === 6) period = 'ramp';
-                else if (hour >= 7 && hour <= 17) period = 'prod';
-                else if (hour === 18) period = 'wind';
-                else period = 'eve';
-
+                const period = getHourPeriod(hour, startHour, endHour, isContinuous);
                 const load = calculatePeriodLoad(equipment, period);
                 weekday.push(Math.round(load));
 
-                // Weekend reduction
+                // Weekend reduction — smarter: continuous facilities keep higher baseline
                 let weekendLoad = load;
                 if (opDays < 7) {
-                    weekendLoad = load * 0.3; // Reduced weekend operation
+                    if (isContinuous) {
+                        weekendLoad = load * 0.7; // Continuous facilities maintain 70% on weekends
+                    } else {
+                        weekendLoad = load * 0.3; // Non-continuous drop to 30%
+                    }
                 }
                 weekend.push(Math.round(weekendLoad));
             }
@@ -1155,19 +1450,32 @@
             return { weekday, weekend };
         }
 
+        // === Render Output (XSS-safe) ===
         function renderOutput(data) {
-            const { inputs, equipment, hourlyProfile, metrics, isContinuous } = data;
+            const { inputs, equipment, hourlyProfile, metrics, isContinuous, usedGenericTemplate } = data;
             const countryInfo = countryData[inputs.country] || { gridHours: 16, voltage: '33 kV', diesel: 1.20 };
             const gridHours = inputs.gridHours || countryInfo.gridHours;
+            const safeCity = escapeHTML(inputs.city || '');
+            const safeCountry = escapeHTML(inputs.country);
+            const templateName = escapeHTML(getTemplate(inputs.industryType).name);
+
+            // Template warning banner
+            const warningEl = document.getElementById('templateWarning');
+            if (usedGenericTemplate) {
+                warningEl.classList.add('visible');
+            } else {
+                warningEl.classList.remove('visible');
+            }
 
             // Documentation tab
-            document.getElementById('facilityTitle').textContent = 
+            document.getElementById('facilityTitle').textContent =
                 `${getTemplate(inputs.industryType).name} - ${inputs.city || inputs.country}`;
 
-            document.getElementById('execSummary').textContent = 
+            document.getElementById('execSummary').textContent =
                 `This load profile represents a ${getTemplate(inputs.industryType).name.toLowerCase()} located in ${inputs.city ? inputs.city + ', ' : ''}${inputs.country}. ` +
-                `The facility operates ${isContinuous ? 'continuously (24/7)' : 'during standard business hours'} with an estimated peak demand of ${metrics.peakLoad.toLocaleString()} kW ` +
-                `and average load of ${Math.round(metrics.avgLoad).toLocaleString()} kW.`;
+                `The facility operates ${isContinuous ? 'continuously (24/7)' : `during scheduled hours (${inputs.startTime || '06:00'} - ${inputs.endTime || '18:00'})`} with an estimated peak demand of ${metrics.peakLoad.toLocaleString()} kW ` +
+                `and average load of ${Math.round(metrics.avgLoad).toLocaleString()} kW.` +
+                (usedGenericTemplate ? ' Note: A generic equipment template was used for this industry type.' : '');
 
             document.getElementById('connectedLoad').textContent = metrics.connectedLoad.toLocaleString();
             document.getElementById('peakLoadOut').textContent = metrics.peakLoad.toLocaleString();
@@ -1176,26 +1484,39 @@
             document.getElementById('loadFactor').textContent = metrics.loadFactor.toFixed(1);
             document.getElementById('annualEnergy').textContent = metrics.annualEnergy.toFixed(1);
 
-            // Confidence
-            const confidence = metrics.loadFactor > 30 && metrics.loadFactor < 90 ? 'medium' : 'low';
+            // Confidence — factor in template quality
+            let confidence;
+            if (usedGenericTemplate) {
+                confidence = 'low';
+            } else if (metrics.loadFactor > 30 && metrics.loadFactor < 90) {
+                confidence = 'medium';
+            } else {
+                confidence = 'low';
+            }
             const confidenceStatus = document.getElementById('confidenceStatus');
             confidenceStatus.textContent = confidence.toUpperCase();
             confidenceStatus.className = `status ${confidence}`;
-            document.getElementById('confidenceText').textContent = 
-                confidence === 'medium' 
-                    ? 'Suitable for feasibility assessment. Client-provided peak/average loads with industry-typical assumptions.'
-                    : 'Requires validation before use. Load factor outside typical range.';
+            let confidenceMsg;
+            if (usedGenericTemplate) {
+                confidenceMsg = 'Generic template used. No industry-specific equipment data available. Results are rough estimates only.';
+            } else if (confidence === 'medium') {
+                confidenceMsg = 'Suitable for feasibility assessment. Client-provided peak/average loads with industry-typical assumptions.';
+            } else {
+                confidenceMsg = 'Requires validation before use. Load factor outside typical range.';
+            }
+            document.getElementById('confidenceText').textContent = confidenceMsg;
 
-            // Assumptions tab
+            // Assumptions tab (XSS-safe)
             document.getElementById('projectInfoTable').innerHTML = `
-                <tr><td>Company location</td><td>${inputs.city ? inputs.city + ', ' : ''}${inputs.country}</td></tr>
-                <tr><td>Industry type</td><td>${getTemplate(inputs.industryType).name}</td></tr>
+                <tr><td>Company location</td><td>${safeCity ? safeCity + ', ' : ''}${safeCountry}</td></tr>
+                <tr><td>Industry type</td><td>${templateName}${usedGenericTemplate ? ' (generic template)' : ''}</td></tr>
                 <tr><td>Operation mode</td><td>${isContinuous ? 'Continuous (24/7)' : 'Standard shifts'}</td></tr>
-                <tr><td>Grid availability</td><td>${gridHours} hours/day (typical for ${inputs.country})</td></tr>
+                <tr><td>Operating hours</td><td>${escapeHTML(inputs.startTime || '06:00')} - ${escapeHTML(inputs.endTime || '18:00')}</td></tr>
+                <tr><td>Grid availability</td><td>${gridHours} hours/day (typical for ${safeCountry})</td></tr>
             `;
 
             document.getElementById('electricalParamsTable').innerHTML = `
-                <tr><td>Grid voltage</td><td>${countryInfo.voltage}</td></tr>
+                <tr><td>Grid voltage</td><td>${escapeHTML(countryInfo.voltage)}</td></tr>
                 <tr><td>Frequency</td><td>50 Hz</td></tr>
                 <tr><td>Target power factor</td><td>0.90</td></tr>
                 <tr><td>Diversity factor</td><td>0.85</td></tr>
@@ -1210,7 +1531,7 @@
             // Equipment tab
             document.getElementById('equipmentTable').innerHTML = equipment.map(eq => `
                 <tr>
-                    <td>${eq.name}</td>
+                    <td>${escapeHTML(eq.name)}</td>
                     <td class="number">${eq.kW.toLocaleString()}</td>
                     <td class="number">${eq.factors.night.toFixed(2)}</td>
                     <td class="number">${eq.factors.ramp.toFixed(2)}</td>
@@ -1224,23 +1545,40 @@
             document.getElementById('loadAnalysisTable').innerHTML = equipment.map((eq, i) => `
                 <tr>
                     <td>${i + 1}</td>
-                    <td>${eq.name}</td>
+                    <td>${escapeHTML(eq.name)}</td>
                     <td class="number">${eq.kW.toLocaleString()}</td>
                     <td class="number">1</td>
                     <td class="number">${eq.kW.toLocaleString()}</td>
                     <td class="number">${eq.factors.prod.toFixed(2)}</td>
                     <td class="number">${Math.round(eq.kW * eq.factors.prod).toLocaleString()}</td>
-                    <td>Estimated from industry template</td>
+                    <td>${usedGenericTemplate ? 'Generic template estimate' : 'Industry-specific template'}</td>
                 </tr>
             `).join('');
 
-            // Hourly profile chart
+            // Hourly profile chart with Y-axis and gridlines
             const maxLoad = Math.max(...hourlyProfile.weekday);
             const chartContainer = document.getElementById('loadChart');
             chartContainer.innerHTML = hourlyProfile.weekday.map((load, i) => {
                 const height = (load / maxLoad) * 100;
-                return `<div class="chart-bar" style="height: ${height}%" data-value="${load} kW"></div>`;
+                return `<div class="chart-bar" style="height: ${height}%" data-value="${load} kW" role="img" aria-label="Hour ${i}: ${load} kW"></div>`;
             }).join('');
+
+            // Y-axis labels
+            const yAxis = document.getElementById('chartYAxis');
+            const gridlines = document.getElementById('chartGridlines');
+            const steps = 5;
+            let yLabels = '';
+            let gridlineHTML = '';
+            for (let i = steps; i >= 0; i--) {
+                const val = Math.round((maxLoad / steps) * i);
+                const pct = 100 - (i / steps) * 100;
+                yLabels += `<span>${val.toLocaleString()}</span>`;
+                if (i > 0 && i < steps) {
+                    gridlineHTML += `<div class="chart-gridline" style="top: ${pct}%"></div>`;
+                }
+            }
+            yAxis.innerHTML = yLabels;
+            gridlines.innerHTML = gridlineHTML;
 
             // Weekly table
             const opDays = parseInt(inputs.operatingDays);
@@ -1257,10 +1595,10 @@
                 }
                 cells += `<td class="number">${opDays >= 6 ? weekdayLoad.toLocaleString() : weekendLoad.toLocaleString()}</td>`;
                 cells += `<td class="number">${opDays >= 7 ? weekdayLoad.toLocaleString() : weekendLoad.toLocaleString()}</td>`;
-                
+
                 const avgDay = (weekdayLoad * 5 + (opDays >= 6 ? weekdayLoad : weekendLoad) + (opDays >= 7 ? weekdayLoad : weekendLoad)) / 7;
                 cells += `<td class="number">${Math.round(avgDay).toLocaleString()}</td>`;
-                
+
                 return `<tr>${cells}</tr>`;
             }).join('');
 
@@ -1272,25 +1610,31 @@
 
             // Generator assessment
             if (inputs.genCapacity) {
-                const genKW = inputs.genCapacity * 0.8; // kVA to kW at 0.8 PF
+                const genKW = inputs.genCapacity * 0.8;
                 const margin = ((genKW - metrics.peakLoad) / metrics.peakLoad * 100).toFixed(1);
                 const status = genKW >= metrics.peakLoad * 1.1 ? 'ADEQUATE' : genKW >= metrics.peakLoad ? 'MARGINAL' : 'INSUFFICIENT';
+                const statusLabel = status === 'ADEQUATE' ? 'high' : status === 'MARGINAL' ? 'medium' : 'low';
                 document.getElementById('generatorAssessment').innerHTML = `
                     <p><strong>Installed capacity:</strong> ${inputs.genCapacity.toLocaleString()} kVA (${Math.round(genKW).toLocaleString()} kW at 0.8 PF)</p>
                     <p><strong>Peak requirement:</strong> ${metrics.peakLoad.toLocaleString()} kW</p>
-                    <p><strong>Margin:</strong> ${margin}% <span class="status ${status === 'ADEQUATE' ? 'high' : status === 'MARGINAL' ? 'medium' : 'low'}">${status}</span></p>
+                    <p><strong>Margin:</strong> ${margin}% <span class="status ${statusLabel}">${status}</span></p>
                 `;
+            } else {
+                document.getElementById('generatorAssessment').innerHTML =
+                    '<p>Generator capacity analysis will appear here if generator capacity is specified.</p>';
             }
 
             // Key notes
             document.getElementById('keyNotes').innerHTML = `
-                <li>Equipment ratings are estimated based on industry templates scaled to client-provided peak load</li>
+                <li>Equipment ratings are estimated based on ${usedGenericTemplate ? 'generic' : 'industry-specific'} templates scaled to client-provided peak load</li>
                 <li>Operating factors derived to match stated average load of ${inputs.avgLoad.toLocaleString()} kW</li>
-                <li>Grid availability assumed at ${gridHours} hours/day based on typical conditions in ${inputs.country}</li>
+                <li>Operating schedule: ${escapeHTML(inputs.startTime || '06:00')} - ${escapeHTML(inputs.endTime || '18:00')}, ${inputs.operatingDays} days/week</li>
+                <li>Grid availability assumed at ${gridHours} hours/day based on typical conditions in ${safeCountry}</li>
                 <li>Diesel fuel cost reference: $${countryInfo.diesel.toFixed(2)}/L</li>
                 <li>Power factor assumed at 0.90; actual may vary by equipment</li>
                 <li>Profile represents typical operation; seasonal variations not included</li>
                 <li>Recommend detailed energy audit before final system design</li>
+                ${usedGenericTemplate ? '<li><strong>Warning:</strong> No industry-specific template available. Generic equipment assumptions used.</li>' : ''}
             `;
 
             // Show output
@@ -1305,7 +1649,7 @@
             let csv = 'Solar C&I Load Profile Export\n\n';
 
             csv += 'Summary\n';
-            csv += `Location,${inputs.city || ''},${inputs.country}\n`;
+            csv += `Location,"${(inputs.city || '').replace(/"/g, '""')}",${inputs.country}\n`;
             csv += `Industry,${getTemplate(inputs.industryType).name}\n`;
             csv += `Connected Load (kW),${metrics.connectedLoad}\n`;
             csv += `Peak Load (kW),${metrics.peakLoad}\n`;
@@ -1316,7 +1660,7 @@
             csv += 'Equipment Schedule\n';
             csv += 'Equipment,Demand kW,Night,Ramp-up,Production,Wind-down,Evening\n';
             equipment.forEach(eq => {
-                csv += `${eq.name},${eq.kW},${eq.factors.night.toFixed(2)},${eq.factors.ramp.toFixed(2)},${eq.factors.prod.toFixed(2)},${eq.factors.wind.toFixed(2)},${eq.factors.eve.toFixed(2)}\n`;
+                csv += `"${eq.name.replace(/"/g, '""')}",${eq.kW},${eq.factors.night.toFixed(2)},${eq.factors.ramp.toFixed(2)},${eq.factors.prod.toFixed(2)},${eq.factors.wind.toFixed(2)},${eq.factors.eve.toFixed(2)}\n`;
             });
 
             csv += '\nHourly Profile (kW)\n';
@@ -1334,31 +1678,102 @@
             URL.revokeObjectURL(url);
         }
 
-        document.getElementById('loadProfileForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        // === Inline Validation ===
+        function clearErrors() {
+            document.querySelectorAll('.form-group.has-error').forEach(g => g.classList.remove('has-error'));
+            document.querySelectorAll('.field-error.visible').forEach(e => e.classList.remove('visible'));
+        }
 
-            const inputs = {
-                country: document.getElementById('country').value,
-                city: document.getElementById('city').value,
-                industryType: document.getElementById('industryType').value,
-                peakLoad: parseFloat(document.getElementById('peakLoad').value),
-                avgLoad: parseFloat(document.getElementById('avgLoad').value),
-                startTime: document.getElementById('startTime').value,
-                endTime: document.getElementById('endTime').value,
-                shifts: document.getElementById('shifts').value,
-                gridHours: document.getElementById('gridHours').value ? parseInt(document.getElementById('gridHours').value) : null,
-                genCapacity: document.getElementById('genCapacity').value ? parseFloat(document.getElementById('genCapacity').value) : null,
-                operatingDays: document.getElementById('operatingDays').value
-            };
-
-            // Validation
-            if (inputs.avgLoad > inputs.peakLoad) {
-                alert('Average load cannot exceed peak load.');
-                return;
+        function showFieldError(groupId, errorId, message) {
+            const group = document.getElementById(groupId);
+            const error = document.getElementById(errorId);
+            if (group) group.classList.add('has-error');
+            if (error) {
+                error.textContent = message;
+                error.classList.add('visible');
             }
+        }
 
-            generatedData = generateProfile(inputs);
-            renderOutput(generatedData);
+        // === localStorage Persistence ===
+        function saveInputs() {
+            const fields = ['country', 'city', 'industryType', 'peakLoad', 'avgLoad', 'startTime', 'endTime', 'shifts', 'gridHours', 'genCapacity', 'operatingDays'];
+            const data = {};
+            fields.forEach(id => {
+                data[id] = document.getElementById(id).value;
+            });
+            localStorage.setItem('lpg-inputs', JSON.stringify(data));
+        }
+
+        function restoreInputs() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('lpg-inputs'));
+                if (!saved) return;
+                Object.keys(saved).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && saved[id]) el.value = saved[id];
+                });
+            } catch (e) { /* ignore parse errors */ }
+        }
+
+        // === Form Submission ===
+        document.addEventListener('DOMContentLoaded', function() {
+            restoreInputs();
+
+            document.getElementById('loadProfileForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                clearErrors();
+
+                const inputs = {
+                    country: document.getElementById('country').value,
+                    city: document.getElementById('city').value,
+                    industryType: document.getElementById('industryType').value,
+                    peakLoad: parseFloat(document.getElementById('peakLoad').value),
+                    avgLoad: parseFloat(document.getElementById('avgLoad').value),
+                    startTime: document.getElementById('startTime').value,
+                    endTime: document.getElementById('endTime').value,
+                    shifts: document.getElementById('shifts').value,
+                    gridHours: document.getElementById('gridHours').value ? parseInt(document.getElementById('gridHours').value) : null,
+                    genCapacity: document.getElementById('genCapacity').value ? parseFloat(document.getElementById('genCapacity').value) : null,
+                    operatingDays: document.getElementById('operatingDays').value
+                };
+
+                // Inline validation
+                let hasError = false;
+
+                if (!inputs.peakLoad || inputs.peakLoad < 1) {
+                    showFieldError('peakLoadGroup', 'peakLoadError', 'Peak load must be at least 1 kW');
+                    hasError = true;
+                }
+
+                if (!inputs.avgLoad || inputs.avgLoad < 1) {
+                    showFieldError('avgLoadGroup', 'avgLoadError', 'Average load must be at least 1 kW');
+                    hasError = true;
+                }
+
+                if (inputs.avgLoad > inputs.peakLoad) {
+                    showFieldError('avgLoadGroup', 'avgLoadError', 'Average load cannot exceed peak load');
+                    hasError = true;
+                }
+
+                if (hasError) return;
+
+                // Save inputs to localStorage
+                saveInputs();
+
+                // Loading feedback
+                const btn = document.querySelector('.generate-btn');
+                const originalText = btn.textContent;
+                btn.textContent = 'Generating...';
+                btn.disabled = true;
+
+                // Small delay for UI feedback, then generate
+                requestAnimationFrame(function() {
+                    generatedData = generateProfile(inputs);
+                    renderOutput(generatedData);
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                });
+            });
         });
     </script>
 </body>
